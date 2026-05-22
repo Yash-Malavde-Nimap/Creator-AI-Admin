@@ -1,0 +1,62 @@
+@use '../../styles/variables' as *;
+
+.card {
+  background: $bg-white;
+  border-radius: $card-radius;
+  padding: 1rem;
+  box-shadow: $card-shadow;
+  display: flex;
+  flex-direction: column;
+  // gap: 6px;
+  min-width: 0;
+  transition: box-shadow 0.2s ease;
+
+  &:hover {
+    box-shadow: $card-shadow-hover;
+  }
+}
+
+.top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: $text-muted;
+  text-transform: uppercase;
+  line-height: 1.5;
+}
+
+.iconWrap {
+  width: 36px;
+  height: 36px;
+  background: $icon-bg-blue;
+  border-radius: $radius-sm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $icon-color-blue;
+  flex-shrink: 0;
+}
+
+.value {
+  font-size: 2rem;
+  font-weight: 500;
+  color: $text-primary;
+  margin-bottom: 0.5rem;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.positive { color: $color-positive; }
+.negative { color: $color-negative; }
+.neutral  { color: $color-neutral;  }

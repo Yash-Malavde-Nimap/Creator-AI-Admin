@@ -1,0 +1,71 @@
+@use '../../styles/variables' as *;
+
+.page {
+  height: calc(100vh - 6rem);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.card {
+  flex: 1;
+  min-height: 0;
+  background: $bg-white;
+  border-radius: $card-radius;
+  box-shadow: $card-shadow;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+// ── Toolbar ───────────────────────────────────────────────
+.toolbar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px;
+  border-bottom: 1px solid $border-light;
+  flex-wrap: wrap;
+}
+
+.filters {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+// ── Table scroll area ─────────────────────────────────────
+.tableArea {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+
+  &::-webkit-scrollbar        { width: 5px; }
+  &::-webkit-scrollbar-track  { background: transparent; }
+  &::-webkit-scrollbar-thumb  { background: $border-color; border-radius: 3px; }
+}
+
+// ── Sort button (injected into Header via HeaderContext) ──
+.sortBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: $bg-white;
+  border: 1px solid $border-color;
+  border-radius: $radius-lg;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: $font-base;
+  color: $text-secondary;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    border-color: #a5b4fc;
+    color: $text-primary;
+  }
+}

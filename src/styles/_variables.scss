@@ -1,0 +1,62 @@
+// ─────────────────────────────────────────────────────────
+//  CREATOR AI  –  Design Tokens
+// ─────────────────────────────────────────────────────────
+
+// ── Typography ────────────────────────────────────────────
+$font-base: 'Switzer', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+// ── Page backgrounds ──────────────────────────────────────
+$bg-page: #F2F5FD;
+$bg-white: #ffffff;
+$bg-hover: #f9fafb;
+
+// ── Sidebar ───────────────────────────────────────────────
+$sidebar-bg: #07081a;
+$sidebar-logo-bg: #181b2e;
+$nav-text: rgba(255, 255, 255, 0.48);
+$nav-text-hover: rgba(255, 255, 255, 0.8);
+
+// ── Logout button ─────────────────────────────────────────
+$logout-bg: rgba(140, 15, 25, 0.30);
+$logout-bg-hover: rgba(140, 15, 25, 0.48);
+$logout-text: #f87171;
+$logout-text-hover: #fca5a5;
+
+// ── Brand / accent ────────────────────────────────────────
+$color-orange: #f97316;
+$color-amber: #f59e0b;
+$gradient-active: linear-gradient(130deg, $color-orange 0%, $color-amber 100%);
+
+// ── Semantic status colours ───────────────────────────────
+$color-positive: #219916;
+$color-negative: #FF3328;
+$color-neutral: #6b7280;
+
+// ── Text ──────────────────────────────────────────────────
+$text-primary: #2A0500;
+$text-secondary: #374151;
+$text-muted: #878787;
+$text-gray: #6b7280;
+
+// ── Borders ───────────────────────────────────────────────
+$border-color: #e5e7eb;
+$border-light: #f0f0f0;
+
+// ── Icon / badge accents ──────────────────────────────────
+$icon-bg-blue: #dbeafe;
+$icon-color-blue: #3b82f6;
+$badge-red: #ef4444;
+$avatar-from: #6366f1;
+$avatar-to: #8b5cf6;
+
+// ── Cards ─────────────────────────────────────────────────
+$card-radius: 14px;
+$card-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
+$card-shadow-hover: 0 4px 14px rgba(0, 0, 0, 0.09);
+
+// ── Misc radii ────────────────────────────────────────────
+$radius-sm: 8px;
+$radius-md: 10px;
+$radius-lg: 12px;
+$radius-xl: 14px;
+$radius-pill: 40px;

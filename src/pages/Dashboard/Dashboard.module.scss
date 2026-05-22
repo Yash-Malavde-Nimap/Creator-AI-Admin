@@ -1,0 +1,233 @@
+@use '../../styles/variables' as *;
+
+// ── Dashboard wrapper ──────────────────────────────
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+// ── Section header (Users label + date) ──────────
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: $text-primary;
+}
+
+.dateChip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 1.25rem;
+  color: $text-secondary;
+  font-weight: 600;
+}
+
+// ── User stat cards grid ──────────────────────────
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+}
+
+// ── Middle row: Revenue + Chart ───────────────────
+.middleRow {
+  display: grid;
+  grid-template-columns: 36fr 64fr;
+  gap: 14px;
+  align-items: start;
+}
+
+// Shared card shell
+.card {
+  height: 100%;
+  background: $bg-white;
+  border-radius: $card-radius;
+  padding: 20px 22px;
+  box-shadow: $card-shadow;
+}
+
+.cardTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: $text-primary;
+  margin-bottom: 16px;
+}
+
+// Revenue card internals
+.revenueGrid {
+  display: flex;
+  align-items: stretch;
+}
+
+.revenueItem {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 4px 0;
+}
+
+.revenueDivider {
+  width: 1px;
+  background: $border-color;
+  margin: 0 20px;
+  align-self: stretch;
+}
+
+.revenueLabel {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: $text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.revenueValue {
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: $text-primary;
+}
+
+.revenueTrend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: $color-positive;
+  font-weight: 500;
+}
+
+.revenueSubtext {
+  font-size: 12px;
+  color: $text-muted;
+}
+
+// Chart header row
+.chartHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 12px;
+
+  .cardTitle {
+    margin-bottom: 0;
+  }
+}
+
+.chartSubtitle {
+  font-size: 11px;
+  color: $text-muted;
+  font-weight: 500;
+  text-align: right;
+  line-height: 1.4;
+  max-width: 160px;
+}
+
+// ── Bottom row: AI Usage + Social Media ──────────
+.bottomCard {
+  background: $bg-white;
+  border-radius: $card-radius;
+  padding: 22px 24px;
+  box-shadow: $card-shadow;
+  display: grid;
+  grid-template-columns: 34fr 1px 66fr;
+  align-items: start;
+}
+
+.aiSection {
+  padding-right: 24px;
+}
+
+.sectionDivider {
+  background: $border-color;
+  align-self: stretch;
+}
+
+.socialSection {
+  padding-left: 24px;
+}
+
+// AI Usage 2×2 grid
+.aiGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid $border-light;
+  border-radius: $radius-md;
+  overflow: hidden;
+}
+
+.aiItem {
+  padding: 15px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-right: 1px solid $border-light;
+  border-bottom: 1px solid $border-light;
+
+  &:nth-child(2n) {
+    border-right: none;
+  }
+
+  &:nth-child(3),
+  &:nth-child(4) {
+    border-bottom: none;
+  }
+}
+
+.aiLabel {
+  font-size: 9.5px;
+  font-weight: 600;
+  color: $text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.aiValue {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: $text-primary;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+}
+
+.aiLinks {
+  font-size: 11.5px;
+  color: $color-positive;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.aiSub {
+  font-size: 11.5px;
+  color: $text-muted;
+}
+
+.aiTrend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  color: $color-positive;
+  font-weight: 500;
+}
+
+// Social Media grid
+.socialGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+
+.socialSubtitle {
+  color: $text-muted;
+  font-weight: 400;
+  font-size: 14px;
+}
