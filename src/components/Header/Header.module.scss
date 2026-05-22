@@ -17,7 +17,7 @@
   font-size: 20px;
   font-weight: 700;
   color: $text-primary;
-  letter-spacing: 0.05em;
+  letter-spacing: 10%;
 }
 
 .actions {
@@ -47,11 +47,6 @@
   color: $text-secondary;
   cursor: pointer;
   transition: all 0.15s ease;
-
-  &:hover {
-    border-color: #a5b4fc;
-    color: $text-primary;
-  }
 }
 
 .notifBtn {
@@ -72,17 +67,6 @@
     background: $bg-hover;
   }
 }
-
-// .badge {
-//   position: absolute;
-//   top: 7px;
-//   right: 7px;
-//   width: 9px;
-//   height: 9px;
-//   background: $badge-red;
-//   border-radius: 50%;
-//   border: 2px solid $bg-white;
-// }
 
 .userMenu {
   display: flex;

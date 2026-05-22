@@ -1,0 +1,16 @@
+@use '../../styles/adminPage' as *;
+@use '../../styles/variables' as vars;
+
+.statusSuccess {
+  font-size: 13px;
+  font-weight: 500;
+  font-family: vars.$font-base;
+  color: vars.$text-primary;
+}
+
+.statusFailed {
+  font-size: 13px;
+  font-weight: 500;
+  font-family: vars.$font-base;
+  color: vars.$color-negative;
+}

@@ -12,6 +12,8 @@ import {
   type PageActions,
 } from "../../contexts/HeaderContext";
 import styles from "./Header.module.scss";
+import NotificationIcon from "../SVGComponents/Header/NotificationIcon";
+import UpDownArrowIcon from "../SVGComponents/Header/UpDownArrowIcon";
 
 const titleMap: Record<string, string> = {
   "/dashboard": "DASHBOARD",
@@ -26,7 +28,11 @@ const ACTION_CONFIG: {
   label: string;
   icon: React.ReactNode;
 }[] = [
-  { key: "onSort", label: "Sort", icon: <ArrowUpDown size={15} /> },
+  {
+    key: "onSort",
+    label: "Sort",
+    icon: <UpDownArrowIcon height={28} width={28} />,
+  },
   { key: "onExport", label: "Export", icon: <Download size={15} /> },
   { key: "onAdd", label: "Add", icon: <Plus size={15} /> },
   { key: "onFilter", label: "Filter", icon: <Filter size={15} /> },
@@ -59,8 +65,7 @@ export default function Header() {
         })}
 
         <button className={styles.notifBtn} aria-label="Notifications">
-          <MessageCircle size={20} />
-          <span className={styles.badge} aria-hidden="true" />
+          <NotificationIcon height={22} width={22} />
         </button>
 
         <div className={styles.userMenu}>

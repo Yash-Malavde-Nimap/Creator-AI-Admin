@@ -1,0 +1,81 @@
+@use '../../../../src/styles/variables' as *;
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.title {
+  font-size: 15px;
+  font-weight: 700;
+  color: $text-primary;
+  font-family: $font-base;
+  margin: 0;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f3f4f6;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.num {
+  font-size: 13.5px;
+  color: $text-secondary;
+  min-width: 22px;
+  flex-shrink: 0;
+  font-family: $font-base;
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  outline: none;
+  font-size: 13.5px;
+  font-family: $font-base;
+  color: $text-primary;
+
+  &::placeholder { color: $text-placeholder; }
+}
+
+.removeBtn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #ef4444;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background 0.12s;
+
+  &:hover { background: #fee2e2; }
+}
+
+.addMore {
+  align-self: flex-end;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #14b8a6;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: $font-base;
+  padding: 0;
+
+  &:hover { color: #0d9488; }
+}

@@ -1,0 +1,64 @@
+@use '../../styles/variables' as *;
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.label {
+  font-size: 11px;
+  font-weight: 500;
+  color: $text-primary;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.inputs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sep {
+  font-size: 13px;
+  color: $text-muted;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.input {
+  width: 128px;
+  background: #f3f4f6;
+  border: 1.5px solid transparent;
+  border-radius: $radius-sm;
+  padding: 7px 10px;
+  font-size: 13px;
+  font-family: $font-base;
+  color: $text-primary;
+  outline: none;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: border-color 0.15s, background 0.15s;
+
+  &:focus {
+    border-color: #a5b4fc;
+    background: #fff;
+  }
+
+  // Calendar icon
+  &::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.45;
+    transition: opacity 0.15s;
+    &:hover { opacity: 0.85; }
+  }
+
+  // Placeholder color when empty
+  &::-webkit-datetime-edit-text,
+  &::-webkit-datetime-edit-month-field,
+  &::-webkit-datetime-edit-day-field,
+  &::-webkit-datetime-edit-year-field {
+    color: $text-muted;
+  }
+}

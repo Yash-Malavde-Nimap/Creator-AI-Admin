@@ -1,0 +1,31 @@
+@use '../../../../src/styles/variables' as *;
+
+.field { display: flex; flex-direction: column; gap: 6px; }
+
+.checkLabel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  accent-color: #6366f1;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.labelText {
+  font-size: 13.5px;
+  font-family: $font-base;
+  color: $text-primary;
+  font-weight: 500;
+}
+
+.required { color: $color-negative; }
+.help { font-size: 11.5px; color: $text-muted; }
+.errorMsg { font-size: 11.5px; color: $color-negative; }

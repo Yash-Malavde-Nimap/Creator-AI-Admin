@@ -1,0 +1,92 @@
+@use '../../../../src/styles/variables' as *;
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 500;
+  color: $text-primary;
+  font-family: $font-base;
+  line-height: 1;
+}
+
+.required {
+  color: $color-negative;
+}
+
+.inputWrap {
+  display: flex;
+  align-items: center;
+  background: #f3f4f6;
+  border-radius: 8px;
+  border: 1.5px solid transparent;
+  transition: border-color 0.15s ease, background 0.15s ease;
+
+  &:focus-within {
+    border-color: #a5b4fc;
+    background: #f5f6ff;
+  }
+
+  &.hasError {
+    border-color: $color-negative;
+  }
+}
+
+.prefix,
+.suffix {
+  flex-shrink: 0;
+  font-size: 13.5px;
+  color: $text-muted;
+  font-family: $font-base;
+  padding: 0 0 0 14px;
+  user-select: none;
+}
+
+.suffix {
+  padding: 0 14px 0 0;
+}
+
+.input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 8px 12px;
+  font-size: 13.5px;
+  font-family: $font-base;
+  color: $text-primary;
+  width: 100%;
+
+  &::placeholder {
+    color: $text-placeholder;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* remove number spinners */
+  &[type='number']::-webkit-inner-spin-button,
+  &[type='number']::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+  }
+
+  &[type='number'] {
+    -moz-appearance: textfield;
+  }
+}
+
+.help {
+  font-size: 11.5px;
+  color: $text-muted;
+}
+
+.errorMsg {
+  font-size: 11.5px;
+  color: $color-negative;
+}

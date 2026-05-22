@@ -210,7 +210,7 @@ export default function Users() {
               onChange={setPlanFilter}
             />
           </div>
-          <SearchBar placeholder="search" />
+          <SearchBar placeholder="search" paramKey="search" />
         </div>
 
         {/* ── Table ───────────────────────────── */}
