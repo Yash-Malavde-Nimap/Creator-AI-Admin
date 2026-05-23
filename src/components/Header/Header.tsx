@@ -64,7 +64,7 @@ export default function Header() {
           );
         })}
 
-        <button className={styles.notifBtn} aria-label="Notifications">
+        <button className={styles.actionBtn} aria-label="Notifications">
           <NotificationIcon height={22} width={22} />
         </button>
 

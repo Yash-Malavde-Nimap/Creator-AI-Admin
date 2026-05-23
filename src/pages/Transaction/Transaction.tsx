@@ -9,6 +9,10 @@ import HeaderActions from "../../components/HeaderActions/HeaderActions";
 import DateRangePicker from "../../components/DateRangePicker/DateRangePicker";
 import type { DateRange } from "../../components/DateRangePicker/DateRangePicker";
 import styles from "./Transaction.module.scss";
+import { PAGE_SIZE, PLAN_OPTIONS } from "../../constants/filterOptions";
+import { PLAN_NAMES } from "../../constants/mockData";
+import { type SortDir, cycleSortDir, calcTotalPages, getPageSlice } from "../../utils/tableUtils";
+import { formatDate } from "../../utils/formatUtils";
 
 export interface Transaction {
   id: number;
@@ -35,7 +39,6 @@ const NAMES = [
   "Grace Moore",
   "Henry Taylor",
 ];
-const PLANS = ["Basic Plan", "Advanced Plan", "Enterprise Plan"] as const;
 const PRICES = [15, 25, 35, 40, 45, 55, 60, 70, 85, 99];
 const METHODS = ["Credit Card", "Debit Card", "Internet Banking"] as const;
 const STATUSES: Transaction["paymentStatus"][] = [
@@ -51,7 +54,7 @@ function makeTransactions(): Transaction[] {
     return {
       id: i + 1,
       fullName: NAMES[i % NAMES.length],
-      planPurchased: PLANS[i % PLANS.length],
+      planPurchased: PLAN_NAMES[i % PLAN_NAMES.length],
       price: PRICES[i % PRICES.length],
       date: d.toISOString().split("T")[0],
       transactionId: `TRXNID${String(949849459968 + i * 13).slice(0, 18)}`,
@@ -63,41 +66,12 @@ function makeTransactions(): Transaction[] {
 }
 
 const ALL_TRANSACTIONS = makeTransactions();
-const PAGE_SIZE = 10;
-
-type SortDir = "none" | "asc" | "desc";
 
 const PAYMENT_STATUS_OPTIONS: SelectOption[] = [
   { value: "all", label: "All Status" },
   { value: "Success", label: "Success" },
   { value: "Payment Failed", label: "Payment Failed" },
 ];
-
-const PLAN_TYPE_OPTIONS: SelectOption[] = [
-  { value: "all", label: "All Plans" },
-  { value: "Basic Plan", label: "Basic Plan" },
-  { value: "Advanced Plan", label: "Advanced Plan" },
-  { value: "Enterprise Plan", label: "Enterprise Plan" },
-];
-
-function formatDate(iso: string): string {
-  const [y, m, d] = iso.split("-");
-  const months = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
-  return `${parseInt(d)} ${months[parseInt(m) - 1]} ${y}`;
-}
 
 export default function Transaction() {
   const [searchParams] = useSearchParams();
@@ -107,7 +81,7 @@ export default function Transaction() {
     PAYMENT_STATUS_OPTIONS[0],
   );
   const [planFilter, setPlanFilter] = useState<SelectOption | null>(
-    PLAN_TYPE_OPTIONS[0],
+    PLAN_OPTIONS[0],
   );
   const [dateRange, setDateRange] = useState<DateRange>({
     startDate: "",
@@ -117,9 +91,7 @@ export default function Transaction() {
   const [sortDir, setSortDir] = useState<SortDir>("none");
 
   const handleSort = useCallback(() => {
-    setSortDir((prev) =>
-      prev === "none" ? "asc" : prev === "asc" ? "desc" : "none",
-    );
+    setSortDir((prev) => cycleSortDir(prev));
   }, []);
 
   const filtered = useMemo(() => {
@@ -146,13 +118,13 @@ export default function Transaction() {
     return result;
   }, [search, statusFilter, planFilter, dateRange, sortDir]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const totalPages = calcTotalPages(filtered.length, PAGE_SIZE);
 
   useEffect(() => {
     setPage(1);
   }, [search, statusFilter, planFilter, dateRange, sortDir]);
 
-  const pageData = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const pageData = getPageSlice(filtered, page, PAGE_SIZE);
 
   const columns = [
     {
@@ -230,14 +202,14 @@ export default function Transaction() {
             />
             <Select
               label="PLAN TYPE"
-              options={PLAN_TYPE_OPTIONS}
+              options={PLAN_OPTIONS}
               value={planFilter}
               onChange={setPlanFilter}
             />
           </div>
 
           {/* Search */}
-          <div className={styles.searchWrap}>
+          <div className={styles.toolbarRight}>
             <SearchBar placeholder="search" />
           </div>
         </div>

@@ -6,8 +6,11 @@ import type { SelectOption } from "../../components/Select/Select";
 import SearchBar from "../../components/SearchBar/SearchBar";
 import Pagination from "../../components/Pagination/Pagination";
 import HeaderActions from "../../components/HeaderActions/HeaderActions";
-import styles from "./Users.module.scss";
 import Toggle from "../../components/Toggle/Toggle";
+import { PAGE_SIZE, STATUS_OPTIONS, PLAN_OPTIONS } from "../../constants/filterOptions";
+import { FIRST_NAMES, LAST_NAMES, PLAN_NAMES } from "../../constants/mockData";
+import { type SortDir, cycleSortDir, calcTotalPages, getPageSlice, matchStatusFilter } from "../../utils/tableUtils";
+import styles from "./Users.module.scss";
 
 export interface User {
   id: number;
@@ -21,45 +24,20 @@ export interface User {
 }
 
 // ── Mock data ─────────────────────────────────────────────
-const FIRST = [
-  "John",
-  "Jane",
-  "Alice",
-  "Bob",
-  "Clara",
-  "David",
-  "Emma",
-  "Frank",
-  "Grace",
-  "Henry",
-];
-const LAST = [
-  "Smith",
-  "Johnson",
-  "Williams",
-  "Brown",
-  "Jones",
-  "Miller",
-  "Davis",
-  "Wilson",
-  "Moore",
-  "Taylor",
-];
-const PLANS = ["Basic Plan", "Advanced Plan", "Enterprise Plan"];
 const IMG_COUNTS = [250, 600, 1500];
 
 function makeUsers(): User[] {
   const list: User[] = [];
   let id = 1;
-  for (const first of FIRST) {
-    for (const last of LAST) {
+  for (const first of FIRST_NAMES) {
+    for (const last of LAST_NAMES) {
       const n = id - 1;
       list.push({
         id,
         fullName: `${first} ${last}`,
         email: `${first.toLowerCase()}.${last.toLowerCase()}@example.com`,
         mobile: `+1 ${900 + (n % 99)} ${100 + ((n * 7) % 900)} ${100 + ((n * 13) % 900)}`,
-        currentPlan: PLANS[n % PLANS.length],
+        currentPlan: PLAN_NAMES[n % PLAN_NAMES.length],
         imagesLeft: IMG_COUNTS[n % IMG_COUNTS.length],
         videosLeft: IMG_COUNTS[(n + 1) % IMG_COUNTS.length],
         active: n % 5 !== 3,
@@ -71,23 +49,6 @@ function makeUsers(): User[] {
 }
 
 const ALL_USERS = makeUsers();
-const PAGE_SIZE = 10;
-
-type SortDir = "none" | "asc" | "desc";
-
-// ── Filter options ────────────────────────────────────────
-const STATUS_OPTIONS: SelectOption[] = [
-  { value: "all", label: "All Status" },
-  { value: "active", label: "Active" },
-  { value: "inactive", label: "Inactive" },
-];
-
-const PLAN_OPTIONS: SelectOption[] = [
-  { value: "all", label: "All Plans" },
-  { value: "Basic Plan", label: "Basic Plan" },
-  { value: "Advanced Plan", label: "Advanced Plan" },
-  { value: "Enterprise Plan", label: "Enterprise Plan" },
-];
 
 export default function Users() {
   const [searchParams] = useSearchParams();
@@ -104,9 +65,7 @@ export default function Users() {
 
   // Cycle: none → asc → desc → none
   const handleSort = useCallback(() => {
-    setSortDir((prev) =>
-      prev === "none" ? "asc" : prev === "asc" ? "desc" : "none",
-    );
+    setSortDir((prev) => cycleSortDir(prev));
   }, []);
 
   // Filtered + sorted dataset
@@ -120,8 +79,7 @@ export default function Users() {
         !q ||
         u.fullName.toLowerCase().includes(q) ||
         u.email.toLowerCase().includes(q);
-      const matchStatus =
-        sv === "all" || (sv === "active" ? u.active : !u.active);
+      const matchStatus = matchStatusFilter(u.active, sv);
       const matchPlan = pv === "all" || u.currentPlan === pv;
       return matchSearch && matchStatus && matchPlan;
     });
@@ -133,13 +91,13 @@ export default function Users() {
     return result;
   }, [users, search, statusFilter, planFilter, sortDir]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const totalPages = calcTotalPages(filtered.length, PAGE_SIZE);
 
   useEffect(() => {
     setPage(1);
   }, [search, statusFilter, planFilter, sortDir]);
 
-  const pageData = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const pageData = getPageSlice(filtered, page, PAGE_SIZE);
 
   const toggleActive = useCallback((userId: number) => {
     setUsers((prev) =>

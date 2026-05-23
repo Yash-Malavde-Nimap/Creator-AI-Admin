@@ -11,6 +11,8 @@ import DynamicForm from "../../components/DynamicForm/DynamicForm";
 import type { FieldConfig } from "../../components/DynamicForm/types";
 import styles from "./Subscription.module.scss";
 import ActionCell from "../../components/ActionCell/ActionCell";
+import { PAGE_SIZE, STATUS_OPTIONS } from "../../constants/filterOptions";
+import { type SortDir, cycleSortDir, calcTotalPages, getPageSlice, matchStatusFilter } from "../../utils/tableUtils";
 
 export interface Plan {
   id: number;
@@ -60,15 +62,6 @@ function makePlans(): Plan[] {
 }
 
 const ALL_PLANS = makePlans();
-const PAGE_SIZE = 10;
-
-type SortDir = "none" | "asc" | "desc";
-
-const STATUS_OPTIONS: SelectOption[] = [
-  { value: "all", label: "All Status" },
-  { value: "active", label: "Active" },
-  { value: "inactive", label: "Inactive" },
-];
 
 const BEST_FOR_OPTIONS: SelectOption[] = [
   { value: "all", label: "All" },
@@ -162,9 +155,7 @@ export default function Subscription() {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
 
   const handleSort = useCallback(() => {
-    setSortDir((prev) =>
-      prev === "none" ? "asc" : prev === "asc" ? "desc" : "none",
-    );
+    setSortDir((prev) => cycleSortDir(prev));
   }, []);
 
   const handleAdd = useCallback(() => {
@@ -173,20 +164,18 @@ export default function Subscription() {
 
   const handleSubmitPlan = useCallback(
     (data: Record<string, unknown>) => {
-      // const newPlan: Plan = {
-      //   id: plans.length + 1,
-      //   planName: String(data.planName ?? ""),
-      //   pricePerMonth: Number(data.pricePerMonth ?? 0),
-      //   annualDiscount: Number(data.annualDiscount ?? 0),
-      //   images: Number(data.imageAllowance ?? 0),
-      //   videos: Number(data.videoAllowance ?? 0),
-      //   active: true,
-      //   bestFor: "All",
-      // };
-      // setPlans((prev) => [newPlan, ...prev]);
-      // setIsPanelOpen(false);
-
-      console.log("data", data);
+      const newPlan: Plan = {
+        id: plans.length + 1,
+        planName: (data.planName as string) ?? "",
+        pricePerMonth: Number(data.pricePerMonth ?? 0),
+        annualDiscount: Number(data.annualDiscount ?? 0),
+        images: Number(data.imageAllowance ?? 0),
+        videos: Number(data.videoAllowance ?? 0),
+        active: true,
+        bestFor: "All",
+      };
+      setPlans((prev) => [newPlan, ...prev]);
+      setIsPanelOpen(false);
     },
     [plans.length],
   );
@@ -198,8 +187,7 @@ export default function Subscription() {
 
     const result = plans.filter((p) => {
       const matchSearch = !q || p.planName.toLowerCase().includes(q);
-      const matchStatus =
-        sv === "all" || (sv === "active" ? p.active : !p.active);
+      const matchStatus = matchStatusFilter(p.active, sv);
       const matchBestFor = bv === "all" || p.bestFor === bv;
       return matchSearch && matchStatus && matchBestFor;
     });
@@ -211,13 +199,13 @@ export default function Subscription() {
     return result;
   }, [plans, search, statusFilter, bestForFilter, sortDir]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const totalPages = calcTotalPages(filtered.length, PAGE_SIZE);
 
   useEffect(() => {
     setPage(1);
   }, [search, statusFilter, bestForFilter, sortDir]);
 
-  const pageData = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const pageData = getPageSlice(filtered, page, PAGE_SIZE);
 
   const toggleActive = useCallback((planId: number) => {
     setPlans((prev) =>
