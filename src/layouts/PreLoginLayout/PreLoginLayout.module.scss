@@ -1,0 +1,43 @@
+@use '../../styles/variables' as *;
+
+.layout {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+
+  // Deep dark base with subtle ambient glows matching the sidebar palette
+  background:
+    radial-gradient(circle at 18% 18%, rgba(143, 0, 255, 0.13), transparent 38%),
+    radial-gradient(circle at 82% 82%, rgba(255, 0, 111, 0.08), transparent 38%),
+    $sidebar-bg;
+}
+
+.card {
+  width: 100%;
+  max-width: 440px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: $radius-xl;
+  padding: 40px;
+  backdrop-filter: blur(20px);
+  transition: 0.3s ease-in-out;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: white;
+  font-size: 18px;
+  font-weight: 700;
+  font-family: $font-base;
+  margin-bottom: 32px;
+}
+
+.brandIcon {
+  color: #c084fc;
+  filter: drop-shadow(0 0 6px rgba(192, 132, 252, 0.65));
+}

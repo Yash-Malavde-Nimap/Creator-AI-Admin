@@ -64,21 +64,6 @@
   // }
 }
 
-.avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, $avatar-from, $avatar-to);
-  color: $bg-white;
-  font-size: 12px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  letter-spacing: 0.02em;
-}
-
 .userInfo {
   display: flex;
   flex-direction: column;

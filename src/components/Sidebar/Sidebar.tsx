@@ -1,45 +1,53 @@
-import { NavLink } from 'react-router-dom';
-import {
-  LayoutDashboard,
-  Users,
-  CreditCard,
-  ArrowLeftRight,
-  LogOut,
-  Sparkles,
-} from 'lucide-react';
-import styles from './Sidebar.module.scss';
+import { NavLink, useNavigate } from "react-router-dom";
+import { LogOut } from "lucide-react";
+import { privateRoutes } from "../../routes/routes";
+import { removeToken } from "../../utils/auth";
+import styles from "./Sidebar.module.scss";
+import CreatorLogoIcon from "../SVGComponents/CreatorLogoIcon";
 
-const navItems = [
-  { to: '/dashboard', icon: LayoutDashboard, label: 'DASHBOARD' },
-  { to: '/users', icon: Users, label: 'USERS' },
-  { to: '/subscription', icon: CreditCard, label: 'SUBSCRIPTION' },
-  { to: '/transaction', icon: ArrowLeftRight, label: 'TRANSACTION' },
-];
+// Derive sidebar items at module level — stable reference, no re-computation on render.
+const sidebarItems = Object.values(privateRoutes).filter(
+  (route) => route.sidebar?.show,
+);
 
 export default function Sidebar() {
+  const navigate = useNavigate();
+
+  function handleLogout() {
+    removeToken();
+    navigate("/login", { replace: true });
+  }
+
   return (
     <aside className={styles.sidebar}>
       <div className={styles.logo}>
-        <Sparkles size={16} className={styles.logoIcon} />
-        <span>Creator AI</span>
+        <CreatorLogoIcon color="#D9D9D9" width={100} />
       </div>
 
       <nav className={styles.nav}>
-        {navItems.map(({ to, icon: Icon, label }) => (
-          <NavLink
-            key={to}
-            to={to}
-            className={({ isActive }) =>
-              [styles.navItem, isActive ? styles.active : ''].filter(Boolean).join(' ')
-            }
-          >
-            <Icon size={16} />
-            <span>{label}</span>
-          </NavLink>
-        ))}
+        {sidebarItems.map((route) => {
+          // Non-null asserted: we already filtered for sidebar.show === true
+          const Icon = route.sidebar!.icon!;
+          // sidebar.label overrides pageName for shorter nav text
+          const label = route.sidebar!.label ?? route.pageName;
+          return (
+            <NavLink
+              key={route.path}
+              to={route.path}
+              className={({ isActive }) =>
+                [styles.navItem, isActive ? styles.active : ""]
+                  .filter(Boolean)
+                  .join(" ")
+              }
+            >
+              <Icon size={16} />
+              <span>{label}</span>
+            </NavLink>
+          );
+        })}
       </nav>
 
-      <button className={styles.logout}>
+      <button className={styles.logout} onClick={handleLogout}>
         <LogOut size={15} />
         <span>LOGOUT</span>
       </button>

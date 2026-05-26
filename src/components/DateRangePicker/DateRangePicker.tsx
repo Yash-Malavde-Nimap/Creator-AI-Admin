@@ -40,6 +40,7 @@ export default function DateRangePicker({
           value={value.startDate}
           max={value.endDate || undefined}
           onChange={handleStart}
+          placeholder="Start Date"
         />
         <span className={styles.sep}>–</span>
         <input

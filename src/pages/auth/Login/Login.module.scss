@@ -1,0 +1,32 @@
+@use '../../../styles/authForm' as auth;
+@use '../../../styles/variables' as *;
+
+.root    { @include auth.root; }
+.heading { @include auth.heading; }
+.sub     { @include auth.sub; }
+.form    { @include auth.form; }
+.field   { @include auth.field; }
+.label   { @include auth.label; }
+.input   { @include auth.input; }
+.error   { @include auth.error; }
+.link    { @include auth.link; }
+.btn     { @include auth.btn; }
+
+// InputField wraps the <input> in a div that normally carries its own bg/border.
+// Reset it here so the auth .input class owns all visual styling.
+.inputWrap {
+  display: block;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+
+  &:focus-within {
+    background: transparent;
+    border-color: transparent;
+  }
+}
+
+.forgotRow {
+  text-align: right;
+  margin-top: -6px;
+}

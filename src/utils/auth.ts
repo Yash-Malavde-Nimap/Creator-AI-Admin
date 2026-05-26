@@ -1,0 +1,19 @@
+const TOKEN_KEY = 'access_token';
+
+export function setToken(token: string): void {
+  localStorage.setItem(TOKEN_KEY, token);
+}
+
+export function getToken(): string | null {
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+export function removeToken(): void {
+  localStorage.removeItem(TOKEN_KEY);
+}
+
+/** Returns true when a non-empty access token is present in localStorage. */
+export function isAuthenticated(): boolean {
+  const token = getToken();
+  return token !== null && token.trim() !== '';
+}

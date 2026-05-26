@@ -1,57 +1,71 @@
+import type { ReactNode } from 'react';
 import {
   MessageCircle,
   ChevronDown,
-  ArrowUpDown,
   Download,
   Plus,
   Filter,
-} from "lucide-react";
-import { useLocation } from "react-router-dom";
+} from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 import {
   useHeaderContext,
   type PageActions,
-} from "../../contexts/HeaderContext";
-import styles from "./Header.module.scss";
-import NotificationIcon from "../SVGComponents/Header/NotificationIcon";
-import UpDownArrowIcon from "../SVGComponents/Header/UpDownArrowIcon";
+} from '../../contexts/HeaderContext';
+import { privateRoutes } from '../../routes/routes';
+import type { NavbarConfig } from '../../types/routes';
+import styles from './Header.module.scss';
+import Avatar from '../Avatar/Avatar';
+import NotificationIcon from '../SVGComponents/Header/NotificationIcon';
+import UpDownArrowIcon from '../SVGComponents/Header/UpDownArrowIcon';
 
-const titleMap: Record<string, string> = {
-  "/dashboard": "DASHBOARD",
-  "/users": "USER MANAGEMENT",
-  "/subscription": "SUBSCRIPTION",
-  "/transaction": "TRANSACTION",
-};
-
-// Extend this list to support more action buttons in the future
+/**
+ * Each entry wires a HeaderContext action key to:
+ *   - the button's aria-label and icon
+ *   - the navbarCom key that can suppress the button (when set to false)
+ */
 const ACTION_CONFIG: {
   key: keyof PageActions;
   label: string;
-  icon: React.ReactNode;
+  icon: ReactNode;
+  navbarKey: keyof NavbarConfig;
 }[] = [
   {
-    key: "onSort",
-    label: "Sort",
+    key: 'onSort',
+    label: 'Sort',
     icon: <UpDownArrowIcon height={28} width={28} />,
+    navbarKey: 'sort',
   },
-  { key: "onExport", label: "Export", icon: <Download size={15} /> },
-  { key: "onAdd", label: "Add", icon: <Plus size={15} /> },
-  { key: "onFilter", label: "Filter", icon: <Filter size={15} /> },
+  { key: 'onExport', label: 'Export', icon: <Download size={15} />, navbarKey: 'export' },
+  { key: 'onAdd',    label: 'Add',    icon: <Plus size={15} />,     navbarKey: 'add'    },
+  { key: 'onFilter', label: 'Filter', icon: <Filter size={15} />,   navbarKey: 'filter' },
 ];
 
 export default function Header() {
   const { pathname } = useLocation();
-  const title = titleMap[pathname] ?? "DASHBOARD";
   const { actions } = useHeaderContext();
+
+  // Look up the current page's route config from the central registry
+  const currentRoute = Object.values(privateRoutes).find((r) => r.path === pathname);
+  const title     = currentRoute?.pageName ?? 'DASHBOARD';
+  const navbarCom = currentRoute?.navbarCom;
+
+  // navbarCom.export can be a static callback — merge it with any page-registered handler,
+  // giving precedence to the static route-level function.
+  const exportHandler =
+    typeof navbarCom?.export === 'function' ? navbarCom.export : actions.onExport;
+
+  const mergedActions: PageActions = { ...actions, onExport: exportHandler };
 
   return (
     <header className={styles.header}>
       <h1 className={styles.title}>{title}</h1>
 
       <div className={styles.actions}>
-        {/* Render a button for every action the current page registered */}
-        {ACTION_CONFIG.map(({ key, label, icon }) => {
-          const handler = actions[key];
+        {ACTION_CONFIG.map(({ key, label, icon, navbarKey }) => {
+          const handler = mergedActions[key];
           if (!handler) return null;
+          // Suppress the button when navbarCom explicitly sets the flag to false
+          if (navbarCom?.[navbarKey] === false) return null;
           return (
             <button
               key={key}
@@ -69,9 +83,7 @@ export default function Header() {
         </button>
 
         <div className={styles.userMenu}>
-          <div className={styles.avatar} aria-hidden="true">
-            SF
-          </div>
+          <Avatar content="SF" />
           <div className={styles.userInfo}>
             <span className={styles.userName}>Simon Finntoff</span>
             <span className={styles.userEmail}>siminfintoff@gmail.com</span>

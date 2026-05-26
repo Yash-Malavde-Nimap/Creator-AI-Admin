@@ -7,9 +7,19 @@ import SearchBar from "../../components/SearchBar/SearchBar";
 import Pagination from "../../components/Pagination/Pagination";
 import HeaderActions from "../../components/HeaderActions/HeaderActions";
 import Toggle from "../../components/Toggle/Toggle";
-import { PAGE_SIZE, STATUS_OPTIONS, PLAN_OPTIONS } from "../../constants/filterOptions";
+import {
+  PAGE_SIZE,
+  STATUS_OPTIONS,
+  PLAN_OPTIONS,
+} from "../../constants/filterOptions";
 import { FIRST_NAMES, LAST_NAMES, PLAN_NAMES } from "../../constants/mockData";
-import { type SortDir, cycleSortDir, calcTotalPages, getPageSlice, matchStatusFilter } from "../../utils/tableUtils";
+import {
+  type SortDir,
+  cycleSortDir,
+  calcTotalPages,
+  getPageSlice,
+  matchStatusFilter,
+} from "../../utils/tableUtils";
 import styles from "./Users.module.scss";
 
 export interface User {

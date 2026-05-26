@@ -12,7 +12,15 @@ import type { FieldConfig } from "../../components/DynamicForm/types";
 import styles from "./Subscription.module.scss";
 import ActionCell from "../../components/ActionCell/ActionCell";
 import { PAGE_SIZE, STATUS_OPTIONS } from "../../constants/filterOptions";
-import { type SortDir, cycleSortDir, calcTotalPages, getPageSlice, matchStatusFilter } from "../../utils/tableUtils";
+import {
+  type SortDir,
+  cycleSortDir,
+  calcTotalPages,
+  getPageSlice,
+  matchStatusFilter,
+} from "../../utils/tableUtils";
+import SubscriptionService from "../../services/api/subscription";
+import toast from "../../utils/toast";
 
 export interface Plan {
   id: number;
@@ -142,7 +150,8 @@ const SUBSCRIPTION_FORM_CONFIG: FieldConfig[] = [
 
 export default function Subscription() {
   const [searchParams] = useSearchParams();
-  const search = searchParams.get("search") ?? "";
+  const search = searchParams.get("search");
+
   const [statusFilter, setStatusFilter] = useState<SelectOption | null>(
     STATUS_OPTIONS[0],
   );
@@ -153,35 +162,75 @@ export default function Subscription() {
   const [plans, setPlans] = useState<Plan[]>(ALL_PLANS);
   const [sortDir, setSortDir] = useState<SortDir>("none");
   const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
+
+  const fetchSubscriptions = async () => {
+    try {
+      const params = {
+        search: search ?? null,
+      };
+      const res = await SubscriptionService.fetchAllSub(params);
+      // console.log("res", res);
+    } catch (error) {
+      console.log("error", error);
+    }
+  };
 
   const handleSort = useCallback(() => {
     setSortDir((prev) => cycleSortDir(prev));
   }, []);
 
+  const closePanel = useCallback(() => {
+    setIsPanelOpen(false);
+    setEditingPlan(null);
+  }, []);
+
   const handleAdd = useCallback(() => {
+    setEditingPlan(null);
     setIsPanelOpen(true);
   }, []);
 
   const handleSubmitPlan = useCallback(
     (data: Record<string, unknown>) => {
-      const newPlan: Plan = {
-        id: plans.length + 1,
-        planName: (data.planName as string) ?? "",
-        pricePerMonth: Number(data.pricePerMonth ?? 0),
-        annualDiscount: Number(data.annualDiscount ?? 0),
-        images: Number(data.imageAllowance ?? 0),
-        videos: Number(data.videoAllowance ?? 0),
-        active: true,
-        bestFor: "All",
-      };
-      setPlans((prev) => [newPlan, ...prev]);
-      setIsPanelOpen(false);
+      if (editingPlan) {
+        setPlans((prev) =>
+          prev.map((p) =>
+            p.id === editingPlan.id
+              ? {
+                  ...p,
+                  planName: (data.planName as string) ?? p.planName,
+                  pricePerMonth: Number(data.pricePerMonth ?? p.pricePerMonth),
+                  annualDiscount: Number(
+                    data.annualDiscount ?? p.annualDiscount,
+                  ),
+                  images: Number(data.imageAllowance ?? p.images),
+                  videos: Number(data.videoAllowance ?? p.videos),
+                }
+              : p,
+          ),
+        );
+      } else {
+        setPlans((prev) => [
+          {
+            id: prev.length + 1,
+            planName: (data.planName as string) ?? "",
+            pricePerMonth: Number(data.pricePerMonth ?? 0),
+            annualDiscount: Number(data.annualDiscount ?? 0),
+            images: Number(data.imageAllowance ?? 0),
+            videos: Number(data.videoAllowance ?? 0),
+            active: true,
+            bestFor: "All",
+          },
+          ...prev,
+        ]);
+      }
+      closePanel();
     },
-    [plans.length],
+    [editingPlan, closePanel],
   );
 
   const filtered = useMemo(() => {
-    const q = search.toLowerCase();
+    const q = search?.toLowerCase();
     const sv = statusFilter?.value ?? "all";
     const bv = bestForFilter?.value ?? "all";
 
@@ -201,10 +250,6 @@ export default function Subscription() {
 
   const totalPages = calcTotalPages(filtered.length, PAGE_SIZE);
 
-  useEffect(() => {
-    setPage(1);
-  }, [search, statusFilter, bestForFilter, sortDir]);
-
   const pageData = getPageSlice(filtered, page, PAGE_SIZE);
 
   const toggleActive = useCallback((planId: number) => {
@@ -212,6 +257,15 @@ export default function Subscription() {
       prev.map((p) => (p.id === planId ? { ...p, active: !p.active } : p)),
     );
   }, []);
+
+  const handleEdit = useCallback((row: Plan) => {
+    setEditingPlan(row);
+    setIsPanelOpen(true);
+  }, []);
+
+  const actionCellCallback = (row: any) => (
+    <ActionCell row={row} onToggle={toggleActive} onEdit={handleEdit} />
+  );
 
   const columns = [
     {
@@ -248,13 +302,28 @@ export default function Subscription() {
       name: "ACTION",
       center: true,
       minWidth: "140px",
-      cell: (row: any) => <ActionCell row={row} onToggle={toggleActive} />,
+      cell: actionCellCallback,
     },
   ];
 
-  const closePanel = () => {
-    setIsPanelOpen(false);
-  };
+  const defaultValuesConfig = editingPlan
+    ? {
+        planName: editingPlan.planName,
+        pricePerMonth: editingPlan.pricePerMonth,
+        annualDiscount: editingPlan.annualDiscount,
+        imageAllowance: editingPlan.images,
+        videoAllowance: editingPlan.videos,
+        features: [{ text: "" }],
+      }
+    : { features: [{ text: "" }] };
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, statusFilter, bestForFilter, sortDir]);
+
+  useEffect(() => {
+    fetchSubscriptions();
+  }, []);
 
   return (
     <div className={styles.page}>
@@ -263,16 +332,15 @@ export default function Subscription() {
       <SidePanel
         isOpen={isPanelOpen}
         onClose={closePanel}
-        title="Add New Subscription"
-        // subtitle="Fill in the details to create a new plan"
+        title={editingPlan ? "Edit Subscription" : "Add New Subscription"}
       >
         {isPanelOpen && (
           <DynamicForm
             formConfig={SUBSCRIPTION_FORM_CONFIG}
-            defaultValues={{ features: [{ text: "" }] }}
+            defaultValues={defaultValuesConfig}
             onSubmit={handleSubmitPlan}
             onCancel={closePanel}
-            submitText="Add New"
+            submitText={editingPlan ? "Save Changes" : "Add New"}
           />
         )}
       </SidePanel>
