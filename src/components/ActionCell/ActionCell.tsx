@@ -1,12 +1,12 @@
 import { Pencil } from "lucide-react";
 import Toggle from "../../components/Toggle/Toggle";
-import type { Plan } from "../../pages/Subscription/Subscription";
+import type { SubscriptionPlan } from "../../types/subscription";
 import styles from "../../pages/Subscription/Subscription.module.scss";
 
 interface ActionCellProps {
-  row: Plan;
-  onToggle?: (id: number) => void;
-  onEdit?: (row: any) => void;
+  row: SubscriptionPlan;
+  onToggle?: (id: string) => void;
+  onEdit?: (row: SubscriptionPlan) => void;
 }
 
 export default function ActionCell({
@@ -20,13 +20,13 @@ export default function ActionCell({
         <button
           onClick={() => onEdit(row)}
           className={styles.editBtn}
-          aria-label={`Edit ${row.planName}`}
+          aria-label={`Edit ${row.name}`}
         >
           <Pencil size={15} />
         </button>
       )}
       {onToggle && (
-        <Toggle checked={row.active} onChange={() => onToggle(row.id)} />
+        <Toggle checked={row.is_active} onChange={() => onToggle(row.id)} />
       )}
     </div>
   );

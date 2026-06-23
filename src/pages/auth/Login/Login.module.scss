@@ -30,3 +30,54 @@
   text-align: right;
   margin-top: -6px;
 }
+
+// ── Phone number compound input ──────────────────
+.phoneField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.phoneGroup {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 4px 16px 4px 8px;
+  transition: border-color 0.2s, background 0.2s;
+
+  &:focus-within {
+    border-color: rgba(192, 132, 252, 0.65);
+    background: rgba(255, 255, 255, 0.09);
+  }
+
+  // react-select control inside the pill
+  > div:first-child {
+    flex-shrink: 0;
+  }
+}
+
+.phoneDivider {
+  width: 1px;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.15);
+  margin: 0 12px;
+  flex-shrink: 0;
+}
+
+.phoneInput {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 14px;
+  font-family: inherit;
+  padding: 8px 0;
+  outline: none;
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.28);
+  }
+}

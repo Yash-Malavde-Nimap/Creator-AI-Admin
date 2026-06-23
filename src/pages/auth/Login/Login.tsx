@@ -1,15 +1,17 @@
 import { useForm, FormProvider } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import InputField from "../../../components/FormFields/InputField/InputField";
+import CountrySelect from "../../../components/CountrySelect/CountrySelect";
 import { setToken } from "../../../utils/auth";
+import AuthService from "../../../services/api/auth";
+import { useDefaultCountryCode } from "../../../hooks/useDefaultCountryCode";
 import styles from "./Login.module.scss";
 
 interface LoginForm {
-  email: string;
+  phone_number: string;
   password: string;
 }
 
-// Shared classNames object passed to every InputField so they all use the auth theme.
 const AUTH_CX = {
   field: styles.field,
   label: styles.label,
@@ -20,21 +22,26 @@ const AUTH_CX = {
 
 export default function Login() {
   const navigate = useNavigate();
+  const [selectedCountry, setSelectedCountry] = useDefaultCountryCode("IN");
+
   const methods = useForm<LoginForm>();
   const {
+    register,
     handleSubmit,
-    formState: { isSubmitting },
+    formState: { errors, isSubmitting },
   } = methods;
 
-  function onSubmit(_data: LoginForm) {
-    const payload = {
-      email: _data?.email.trim(),
-      password: _data?.password.trim(),
-    };
-    console.log("payload", payload);
+  async function onSubmit(data: LoginForm) {
+    const res = await AuthService.login({
+      whatsapp_number: `${Number(selectedCountry.data.code)}${data.phone_number.trim()}`,
+      password: data.password.trim(),
+      role: "admin",
+    });
 
-    setToken("access_token");
-    navigate("/dashboard", { replace: true });
+    if (res?.success) {
+      setToken(res.access_token);
+      navigate("/dashboard", { replace: true });
+    }
   }
 
   return (
@@ -48,23 +55,40 @@ export default function Login() {
           onSubmit={handleSubmit(onSubmit)}
           noValidate
         >
-          <InputField
-            config={{
-              name: "email",
-              label: "Email",
-              type: "email",
-              placeholder: "admin@example.com",
-              validation: {
-                required: "Email is required",
-                pattern: {
-                  value: /\S+@\S+\.\S+/,
-                  message: "Enter a valid email",
-                },
-              },
-            }}
-            classNames={AUTH_CX}
-          />
+          {/* ── WhatsApp Number ── */}
+          <div className={styles.phoneField}>
+            <label className={styles.label}>WhatsApp Number</label>
+            <div className={styles.phoneGroup}>
+              <CountrySelect
+                value={selectedCountry}
+                onChange={setSelectedCountry}
+                theme="dark"
+              />
 
+              <div className={styles.phoneDivider} />
+
+              <input
+                {...register("phone_number", {
+                  required: "WhatsApp number is required",
+                  pattern: {
+                    value: /^\d{6,15}$/,
+                    message: "Enter digits only (6–15 numbers)",
+                  },
+                })}
+                type="tel"
+                inputMode="numeric"
+                className={styles.phoneInput}
+                placeholder="mobile number"
+              />
+            </div>
+            {errors.phone_number && (
+              <span className={styles.error}>
+                {errors.phone_number.message}
+              </span>
+            )}
+          </div>
+
+          {/* ── Password ── */}
           <InputField
             config={{
               name: "password",

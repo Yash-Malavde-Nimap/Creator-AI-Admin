@@ -20,63 +20,24 @@ import {
   matchStatusFilter,
 } from "../../utils/tableUtils";
 import SubscriptionService from "../../services/api/subscription";
+import type {
+  SubscriptionPlan,
+  CreateSubscriptionPayload,
+} from "../../types/subscription";
 import toast from "../../utils/toast";
 
-export interface Plan {
-  id: number;
-  planName: string;
-  pricePerMonth: number;
-  annualDiscount: number;
-  images: number;
-  videos: number;
-  active: boolean;
-  bestFor: string;
+function mapFormToPayload(
+  data: Record<string, unknown>,
+): CreateSubscriptionPayload {
+  return {
+    name: data.planName as string,
+    price_monthly: Number(data.pricePerMonth ?? 0),
+    annual_discount_percentage: Number(data.annualDiscount ?? 0),
+    image_allowance: Number(data.imageAllowance ?? 0),
+    video_allowance: Number(data.videoAllowance ?? 0),
+    description: (data.description as string) || undefined,
+  };
 }
-
-// ── Mock data ─────────────────────────────────────────────
-const PLAN_TEMPLATES = [
-  {
-    planName: "Starter",
-    pricePerMonth: 24.99,
-    annualDiscount: 10,
-    images: 250,
-    videos: 250,
-    bestFor: "Individuals",
-  },
-  {
-    planName: "Pro",
-    pricePerMonth: 59.99,
-    annualDiscount: 15,
-    images: 600,
-    videos: 600,
-    bestFor: "Teams",
-  },
-  {
-    planName: "Business",
-    pricePerMonth: 99.99,
-    annualDiscount: 20,
-    images: 1500,
-    videos: 1500,
-    bestFor: "Enterprise",
-  },
-];
-
-function makePlans(): Plan[] {
-  return Array.from({ length: 90 }, (_, i) => ({
-    id: i + 1,
-    ...PLAN_TEMPLATES[i % PLAN_TEMPLATES.length],
-    active: i % 5 !== 3,
-  }));
-}
-
-const ALL_PLANS = makePlans();
-
-const BEST_FOR_OPTIONS: SelectOption[] = [
-  { value: "all", label: "All" },
-  { value: "Individuals", label: "Individuals" },
-  { value: "Teams", label: "Teams" },
-  { value: "Enterprise", label: "Enterprise" },
-];
 
 const SUBSCRIPTION_FORM_CONFIG: FieldConfig[] = [
   {
@@ -124,14 +85,14 @@ const SUBSCRIPTION_FORM_CONFIG: FieldConfig[] = [
     placeholder: "e.g. 30",
     validation: { valueAsNumber: true },
   },
-  {
-    name: "features",
-    label: "Features",
-    type: "field-array",
-    colSpan: "full",
-    addButtonLabel: "+Add More",
-    itemPlaceholder: "e.g. WhatsApp integration",
-  },
+  // {
+  //   name: "features",
+  //   label: "Features",
+  //   type: "field-array",
+  //   colSpan: "full",
+  //   addButtonLabel: "+Add More",
+  //   itemPlaceholder: "e.g. WhatsApp integration",
+  // },
   {
     name: "annualDiscount",
     label: "Annual Discount (%)",
@@ -155,26 +116,24 @@ export default function Subscription() {
   const [statusFilter, setStatusFilter] = useState<SelectOption | null>(
     STATUS_OPTIONS[0],
   );
-  const [bestForFilter, setBestForFilter] = useState<SelectOption | null>(
-    BEST_FOR_OPTIONS[0],
-  );
   const [page, setPage] = useState(1);
-  const [plans, setPlans] = useState<Plan[]>(ALL_PLANS);
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
+  const [loading, setLoading] = useState(true);
   const [sortDir, setSortDir] = useState<SortDir>("none");
   const [isPanelOpen, setIsPanelOpen] = useState(false);
-  const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
+  const [editingPlan, setEditingPlan] = useState<SubscriptionPlan | null>(null);
 
-  const fetchSubscriptions = async () => {
+  const fetchAllPlans = useCallback(async () => {
+    setLoading(true);
     try {
-      const params = {
-        search: search ?? null,
-      };
-      const res = await SubscriptionService.fetchAllSub(params);
-      // console.log("res", res);
-    } catch (error) {
-      console.log("error", error);
+      const res = await SubscriptionService.fetchAll();
+      setPlans(res.data);
+    } catch {
+      // errors handled by axios interceptors
+    } finally {
+      setLoading(false);
     }
-  };
+  }, []);
 
   const handleSort = useCallback(() => {
     setSortDir((prev) => cycleSortDir(prev));
@@ -190,140 +149,133 @@ export default function Subscription() {
     setIsPanelOpen(true);
   }, []);
 
+  const handleEdit = useCallback((row: SubscriptionPlan) => {
+    setEditingPlan(row);
+    setIsPanelOpen(true);
+  }, []);
+
   const handleSubmitPlan = useCallback(
-    (data: Record<string, unknown>) => {
-      if (editingPlan) {
+    async (data: Record<string, unknown>) => {
+      const payload = mapFormToPayload(data);
+      try {
+        if (editingPlan) {
+          await SubscriptionService.update(editingPlan.id, payload);
+          toast.success("Plan updated successfully.");
+        } else {
+          await SubscriptionService.create(payload);
+          toast.success("Plan created successfully.");
+        }
+        closePanel();
+        await fetchAllPlans();
+      } catch {
+        // errors handled by axios interceptors
+      }
+    },
+    [editingPlan, closePanel, fetchAllPlans],
+  );
+
+  const toggleActive = useCallback(
+    async (planId: string) => {
+      const plan = plans.find((p) => p.id === planId);
+      if (!plan) return;
+      try {
+        await SubscriptionService.update(planId, { is_active: !plan.is_active });
         setPlans((prev) =>
           prev.map((p) =>
-            p.id === editingPlan.id
-              ? {
-                  ...p,
-                  planName: (data.planName as string) ?? p.planName,
-                  pricePerMonth: Number(data.pricePerMonth ?? p.pricePerMonth),
-                  annualDiscount: Number(
-                    data.annualDiscount ?? p.annualDiscount,
-                  ),
-                  images: Number(data.imageAllowance ?? p.images),
-                  videos: Number(data.videoAllowance ?? p.videos),
-                }
-              : p,
+            p.id === planId ? { ...p, is_active: !p.is_active } : p,
           ),
         );
-      } else {
-        setPlans((prev) => [
-          {
-            id: prev.length + 1,
-            planName: (data.planName as string) ?? "",
-            pricePerMonth: Number(data.pricePerMonth ?? 0),
-            annualDiscount: Number(data.annualDiscount ?? 0),
-            images: Number(data.imageAllowance ?? 0),
-            videos: Number(data.videoAllowance ?? 0),
-            active: true,
-            bestFor: "All",
-          },
-          ...prev,
-        ]);
+      } catch {
+        // errors handled by axios interceptors
       }
-      closePanel();
     },
-    [editingPlan, closePanel],
+    [plans],
   );
 
   const filtered = useMemo(() => {
     const q = search?.toLowerCase();
     const sv = statusFilter?.value ?? "all";
-    const bv = bestForFilter?.value ?? "all";
 
     const result = plans.filter((p) => {
-      const matchSearch = !q || p.planName.toLowerCase().includes(q);
-      const matchStatus = matchStatusFilter(p.active, sv);
-      const matchBestFor = bv === "all" || p.bestFor === bv;
-      return matchSearch && matchStatus && matchBestFor;
+      const matchSearch = !q || p.name.toLowerCase().includes(q);
+      const matchStatus = matchStatusFilter(p.is_active, sv);
+      return matchSearch && matchStatus;
     });
 
     if (sortDir === "asc")
-      return [...result].sort((a, b) => a.planName.localeCompare(b.planName));
+      return [...result].sort((a, b) => a.name.localeCompare(b.name));
     if (sortDir === "desc")
-      return [...result].sort((a, b) => b.planName.localeCompare(a.planName));
+      return [...result].sort((a, b) => b.name.localeCompare(a.name));
     return result;
-  }, [plans, search, statusFilter, bestForFilter, sortDir]);
+  }, [plans, search, statusFilter, sortDir]);
 
   const totalPages = calcTotalPages(filtered.length, PAGE_SIZE);
-
   const pageData = getPageSlice(filtered, page, PAGE_SIZE);
 
-  const toggleActive = useCallback((planId: number) => {
-    setPlans((prev) =>
-      prev.map((p) => (p.id === planId ? { ...p, active: !p.active } : p)),
-    );
-  }, []);
-
-  const handleEdit = useCallback((row: Plan) => {
-    setEditingPlan(row);
-    setIsPanelOpen(true);
-  }, []);
-
-  const actionCellCallback = (row: any) => (
+  const actionCellCallback = (row: SubscriptionPlan) => (
     <ActionCell row={row} onToggle={toggleActive} onEdit={handleEdit} />
   );
 
   const columns = [
     {
       name: "PLAN NAME",
-      selector: (row: any) => row.planName,
-      minWidth: "200px",
+      selector: (row: any) => row.name,
+      width: "25%",
     },
     {
       name: "PRICE/MO.",
-      selector: (row: any) => row.pricePerMonth,
-      minWidth: "140px",
-      cell: (row: any) => `€${row.pricePerMonth.toFixed(2)}`,
+      selector: (row: any) => row.price_monthly,
+      width: "15%",
+      cell: (row: any) =>
+        row.price_monthly != null ? `€${row.price_monthly}` : "-",
     },
     {
       name: "ANNUAL%",
-      selector: (row: any) => row.annualDiscount,
-      minWidth: "130px",
+      selector: (row: any) => row.annual_discount_percentage,
+      width: "15%",
       center: true,
-      cell: (row: any) => `${row.annualDiscount}%`,
+      cell: (row: any) => `${row.annual_discount_percentage ?? 0}%`,
     },
     {
       name: "IMAGES",
-      selector: (row: any) => row.images,
+      selector: (row: any) => row.image_allowance,
+      width: "10%",
       center: true,
-      minWidth: "120px",
     },
     {
       name: "VIDEOS",
-      selector: (row: any) => row.videos,
+      selector: (row: any) => row.video_allowance,
+      width: "10%",
       center: true,
-      minWidth: "120px",
     },
     {
       name: "ACTION",
+      width: "25%",
       center: true,
-      minWidth: "140px",
       cell: actionCellCallback,
     },
   ];
 
+  // Pre-fill form field names when editing (form uses camelCase names)
   const defaultValuesConfig = editingPlan
     ? {
-        planName: editingPlan.planName,
-        pricePerMonth: editingPlan.pricePerMonth,
-        annualDiscount: editingPlan.annualDiscount,
-        imageAllowance: editingPlan.images,
-        videoAllowance: editingPlan.videos,
+        planName: editingPlan.name,
+        pricePerMonth: editingPlan.price_monthly,
+        annualDiscount: editingPlan.annual_discount_percentage,
+        imageAllowance: editingPlan.image_allowance,
+        videoAllowance: editingPlan.video_allowance,
+        description: editingPlan.description ?? "",
         features: [{ text: "" }],
       }
     : { features: [{ text: "" }] };
 
   useEffect(() => {
     setPage(1);
-  }, [search, statusFilter, bestForFilter, sortDir]);
+  }, [search, statusFilter, sortDir]);
 
   useEffect(() => {
-    fetchSubscriptions();
-  }, []);
+    fetchAllPlans();
+  }, [fetchAllPlans]);
 
   return (
     <div className={styles.page}>
@@ -346,7 +298,6 @@ export default function Subscription() {
       </SidePanel>
 
       <div className={styles.card}>
-        {/* ── Toolbar ─────────────────────────── */}
         <div className={styles.toolbar}>
           <div className={styles.filters}>
             <Select
@@ -354,12 +305,6 @@ export default function Subscription() {
               options={STATUS_OPTIONS}
               value={statusFilter}
               onChange={setStatusFilter}
-            />
-            <Select
-              label="BEST FOR"
-              options={BEST_FOR_OPTIONS}
-              value={bestForFilter}
-              onChange={setBestForFilter}
             />
           </div>
 
@@ -371,18 +316,18 @@ export default function Subscription() {
           </div>
         </div>
 
-        {/* ── Table ───────────────────────────── */}
         <div className={styles.tableArea}>
-          <DataTable<Plan>
+          <DataTable<SubscriptionPlan>
             columns={columns}
             data={pageData}
             keyField="id"
             highlightOnHover
-            noDataMessage="No plans match your filters."
+            noDataMessage={
+              loading ? "Loading..." : "No plans match your filters."
+            }
           />
         </div>
 
-        {/* ── Pagination ──────────────────────── */}
         <Pagination
           currentPage={page}
           totalPages={totalPages}
