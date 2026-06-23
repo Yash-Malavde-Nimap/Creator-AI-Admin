@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import DataTable from "../../components/DataTable/DataTable";
 import Select from "../../components/Select/Select";
@@ -37,7 +37,7 @@ export default function Transaction() {
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  const fetchTransactions = async () => {
+  const fetchTransactions = useCallback(async () => {
     setLoading(true);
     try {
       const params = {
@@ -57,7 +57,7 @@ export default function Transaction() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [search, statusFilter, dateRange, page]);
 
   const totalPages = calcTotalPages(totalCount, PAGE_SIZE);
 
@@ -124,7 +124,7 @@ export default function Transaction() {
   // Fetch from API — all filtering and pagination delegated to the server
   useEffect(() => {
     fetchTransactions();
-  }, [search, statusFilter, dateRange, page]);
+  }, [fetchTransactions]);
 
   return (
     <div className={styles.page}>

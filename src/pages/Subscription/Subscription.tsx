@@ -110,7 +110,7 @@ export default function Subscription() {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<SubscriptionPlan | null>(null);
 
-  const fetchPlans = async () => {
+  const fetchPlans = useCallback(async () => {
     setLoading(true);
     try {
       const params = {
@@ -127,7 +127,7 @@ export default function Subscription() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [search, statusFilter, page, refreshKey]);
 
   const closePanel = useCallback(() => {
     setIsPanelOpen(false);
@@ -250,7 +250,7 @@ export default function Subscription() {
   // Fetch from API — all filtering and pagination delegated to the server
   useEffect(() => {
     fetchPlans();
-  }, [search, statusFilter, page, refreshKey]);
+  }, [fetchPlans]);
 
   return (
     <div className={styles.page}>
