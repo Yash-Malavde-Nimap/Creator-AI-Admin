@@ -17,8 +17,8 @@ import type { TransactionRecord } from "../../types/transaction";
 
 const PAYMENT_STATUS_OPTIONS: SelectOption[] = [
   { value: "all", label: "All Status" },
-  { value: "Success", label: "Success" },
-  { value: "Payment Failed", label: "Payment Failed" },
+  { value: "success", label: "Success" },
+  { value: "payment-failed", label: "Payment Failed" },
 ];
 
 export default function Transaction() {
