@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import DataTable from "../../components/DataTable/DataTable";
 import Select from "../../components/Select/Select";
@@ -12,13 +12,7 @@ import type { FieldConfig } from "../../components/DynamicForm/types";
 import styles from "./Subscription.module.scss";
 import ActionCell from "../../components/ActionCell/ActionCell";
 import { PAGE_SIZE, STATUS_OPTIONS } from "../../constants/filterOptions";
-import {
-  type SortDir,
-  cycleSortDir,
-  calcTotalPages,
-  getPageSlice,
-  matchStatusFilter,
-} from "../../utils/tableUtils";
+import { calcTotalPages } from "../../utils/tableUtils";
 import SubscriptionService from "../../services/api/subscription";
 import type {
   SubscriptionPlan,
@@ -85,14 +79,6 @@ const SUBSCRIPTION_FORM_CONFIG: FieldConfig[] = [
     placeholder: "e.g. 30",
     validation: { valueAsNumber: true },
   },
-  // {
-  //   name: "features",
-  //   label: "Features",
-  //   type: "field-array",
-  //   colSpan: "full",
-  //   addButtonLabel: "+Add More",
-  //   itemPlaceholder: "e.g. WhatsApp integration",
-  // },
   {
     name: "annualDiscount",
     label: "Annual Discount (%)",
@@ -111,33 +97,37 @@ const SUBSCRIPTION_FORM_CONFIG: FieldConfig[] = [
 
 export default function Subscription() {
   const [searchParams] = useSearchParams();
-  const search = searchParams.get("search");
+  const search = searchParams.get("search") ?? "";
 
   const [statusFilter, setStatusFilter] = useState<SelectOption | null>(
     STATUS_OPTIONS[0],
   );
   const [page, setPage] = useState(1);
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [sortDir, setSortDir] = useState<SortDir>("none");
+  const [refreshKey, setRefreshKey] = useState(0);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<SubscriptionPlan | null>(null);
 
-  const fetchAllPlans = useCallback(async () => {
+  const fetchPlans = async () => {
     setLoading(true);
     try {
-      const res = await SubscriptionService.fetchAll();
+      const params = {
+        search: search || undefined,
+        status: statusFilter?.value ?? "all",
+        page,
+        page_size: PAGE_SIZE,
+      };
+      const res = await SubscriptionService.fetchAll(params);
       setPlans(res.data);
+      setTotalCount(res.count);
     } catch {
       // errors handled by axios interceptors
     } finally {
       setLoading(false);
     }
-  }, []);
-
-  const handleSort = useCallback(() => {
-    setSortDir((prev) => cycleSortDir(prev));
-  }, []);
+  };
 
   const closePanel = useCallback(() => {
     setIsPanelOpen(false);
@@ -166,12 +156,12 @@ export default function Subscription() {
           toast.success("Plan created successfully.");
         }
         closePanel();
-        await fetchAllPlans();
+        setRefreshKey((k) => k + 1);
       } catch {
         // errors handled by axios interceptors
       }
     },
-    [editingPlan, closePanel, fetchAllPlans],
+    [editingPlan, closePanel],
   );
 
   const toggleActive = useCallback(
@@ -179,7 +169,9 @@ export default function Subscription() {
       const plan = plans.find((p) => p.id === planId);
       if (!plan) return;
       try {
-        await SubscriptionService.update(planId, { is_active: !plan.is_active });
+        await SubscriptionService.update(planId, {
+          is_active: !plan.is_active,
+        });
         setPlans((prev) =>
           prev.map((p) =>
             p.id === planId ? { ...p, is_active: !p.is_active } : p,
@@ -192,25 +184,7 @@ export default function Subscription() {
     [plans],
   );
 
-  const filtered = useMemo(() => {
-    const q = search?.toLowerCase();
-    const sv = statusFilter?.value ?? "all";
-
-    const result = plans.filter((p) => {
-      const matchSearch = !q || p.name.toLowerCase().includes(q);
-      const matchStatus = matchStatusFilter(p.is_active, sv);
-      return matchSearch && matchStatus;
-    });
-
-    if (sortDir === "asc")
-      return [...result].sort((a, b) => a.name.localeCompare(b.name));
-    if (sortDir === "desc")
-      return [...result].sort((a, b) => b.name.localeCompare(a.name));
-    return result;
-  }, [plans, search, statusFilter, sortDir]);
-
-  const totalPages = calcTotalPages(filtered.length, PAGE_SIZE);
-  const pageData = getPageSlice(filtered, page, PAGE_SIZE);
+  const totalPages = calcTotalPages(totalCount, PAGE_SIZE);
 
   const actionCellCallback = (row: SubscriptionPlan) => (
     <ActionCell row={row} onToggle={toggleActive} onEdit={handleEdit} />
@@ -256,7 +230,6 @@ export default function Subscription() {
     },
   ];
 
-  // Pre-fill form field names when editing (form uses camelCase names)
   const defaultValuesConfig = editingPlan
     ? {
         planName: editingPlan.name,
@@ -269,17 +242,19 @@ export default function Subscription() {
       }
     : { features: [{ text: "" }] };
 
+  // Reset to page 1 when search or status filter changes
   useEffect(() => {
     setPage(1);
-  }, [search, statusFilter, sortDir]);
+  }, [search, statusFilter]);
 
+  // Fetch from API — all filtering and pagination delegated to the server
   useEffect(() => {
-    fetchAllPlans();
-  }, [fetchAllPlans]);
+    fetchPlans();
+  }, [search, statusFilter, page, refreshKey]);
 
   return (
     <div className={styles.page}>
-      <HeaderActions onSort={handleSort} />
+      <HeaderActions />
 
       <SidePanel
         isOpen={isPanelOpen}
@@ -319,7 +294,7 @@ export default function Subscription() {
         <div className={styles.tableArea}>
           <DataTable<SubscriptionPlan>
             columns={columns}
-            data={pageData}
+            data={plans}
             keyField="id"
             highlightOnHover
             noDataMessage={

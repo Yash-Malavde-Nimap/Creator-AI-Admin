@@ -4,6 +4,7 @@ import type { User } from "../../types/user";
 
 export interface UserListParams {
   search?: string;
+  status?: string;
   page?: number;
   page_size?: number;
 }

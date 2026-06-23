@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import DataTable from "../../components/DataTable/DataTable";
 import Select from "../../components/Select/Select";
@@ -10,13 +10,8 @@ import DateRangePicker from "../../components/DateRangePicker/DateRangePicker";
 import type { DateRange } from "../../components/DateRangePicker/DateRangePicker";
 import styles from "./Transaction.module.scss";
 import { PAGE_SIZE } from "../../constants/filterOptions";
-import {
-  type SortDir,
-  cycleSortDir,
-  calcTotalPages,
-  getPageSlice,
-} from "../../utils/tableUtils";
-import { formatDate } from "../../utils/formatUtils";
+import { calcTotalPages } from "../../utils/tableUtils";
+import { capitalizeText, formatDate } from "../../utils/formatUtils";
 import TransactionService from "../../services/api/transaction";
 import type { TransactionRecord } from "../../types/transaction";
 
@@ -38,59 +33,33 @@ export default function Transaction() {
     endDate: "",
   });
   const [page, setPage] = useState(1);
-  const [sortDir, setSortDir] = useState<SortDir>("none");
   const [transactions, setTransactions] = useState<TransactionRecord[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  const fetchAllTransactions = useCallback(async () => {
+  const fetchTransactions = async () => {
     setLoading(true);
     try {
-      const res = await TransactionService.fetchAll();
+      const params = {
+        search: search || undefined,
+        payment_status:
+          statusFilter?.value !== "all" ? statusFilter?.value : undefined,
+        start_date: dateRange.startDate || undefined,
+        end_date: dateRange.endDate || undefined,
+        page,
+        page_size: PAGE_SIZE,
+      };
+      const res = await TransactionService.fetchAll(params);
       setTransactions(res.data);
+      setTotalCount(res.count);
     } catch {
       // errors handled by axios interceptors
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
-  const handleSort = useCallback(() => {
-    setSortDir((prev) => cycleSortDir(prev));
-  }, []);
-
-  const filtered = useMemo(() => {
-    const q = search.toLowerCase();
-    const sv = statusFilter?.value ?? "all";
-
-    const result = transactions.filter((t) => {
-      const matchSearch =
-        !q ||
-        t.user_name.toLowerCase().includes(q) ||
-        t.transaction_id.toLowerCase().includes(q);
-      const matchStatus = sv === "all" || t.payment_status === sv;
-      const dateStr = t.date.split("T")[0];
-      const matchStart = !dateRange.startDate || dateStr >= dateRange.startDate;
-      const matchEnd = !dateRange.endDate || dateStr <= dateRange.endDate;
-      return matchSearch && matchStatus && matchStart && matchEnd;
-    });
-
-    if (sortDir === "asc")
-      return [...result].sort((a, b) => a.user_name.localeCompare(b.user_name));
-    if (sortDir === "desc")
-      return [...result].sort((a, b) => b.user_name.localeCompare(a.user_name));
-    return result;
-  }, [transactions, search, statusFilter, dateRange, sortDir]);
-
-  const totalPages = calcTotalPages(filtered.length, PAGE_SIZE);
-  const pageData = getPageSlice(filtered, page, PAGE_SIZE);
-
-  useEffect(() => {
-    setPage(1);
-  }, [search, statusFilter, dateRange, sortDir]);
-
-  useEffect(() => {
-    fetchAllTransactions();
-  }, [fetchAllTransactions]);
+  const totalPages = calcTotalPages(totalCount, PAGE_SIZE);
 
   const columns = [
     {
@@ -137,19 +106,7 @@ export default function Transaction() {
       selector: (row: any) => row.payment_status,
       minWidth: "160px",
       cell: (row: any) =>
-        row.payment_status ? (
-          <span
-            className={
-              row.payment_status === "Success"
-                ? styles.statusSuccess
-                : styles.statusFailed
-            }
-          >
-            {row.payment_status}
-          </span>
-        ) : (
-          "-"
-        ),
+        row.payment_status ? capitalizeText(row?.payment_status) : "-",
     },
     {
       name: "PAYMENT METHOD",
@@ -159,9 +116,19 @@ export default function Transaction() {
     },
   ];
 
+  // Reset to page 1 when any filter changes
+  useEffect(() => {
+    setPage(1);
+  }, [search, statusFilter, dateRange]);
+
+  // Fetch from API — all filtering and pagination delegated to the server
+  useEffect(() => {
+    fetchTransactions();
+  }, [search, statusFilter, dateRange, page]);
+
   return (
     <div className={styles.page}>
-      <HeaderActions onSort={handleSort} />
+      <HeaderActions />
 
       <div className={styles.card}>
         <div className={styles.toolbar}>
@@ -173,7 +140,6 @@ export default function Transaction() {
               value={statusFilter}
               onChange={setStatusFilter}
             />
-
           </div>
 
           <div className={styles.toolbarRight}>
@@ -184,7 +150,7 @@ export default function Transaction() {
         <div className={styles.tableArea}>
           <DataTable<TransactionRecord>
             columns={columns}
-            data={pageData}
+            data={transactions}
             keyField="order_id"
             highlightOnHover
             noDataMessage={

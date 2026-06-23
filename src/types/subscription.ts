@@ -39,8 +39,8 @@ export interface CreateSubscriptionPayload {
 export type UpdateSubscriptionPayload = Partial<CreateSubscriptionPayload>;
 
 export interface SubscriptionListParams {
-  search?: string | null;
-  is_active?: boolean;
+  search?: string;
+  status?: string;
   page?: number;
   page_size?: number;
 }
